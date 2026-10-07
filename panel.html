@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panadería & Blanquería - Sistema de Gestión</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .btn-icon { font-size: 1.2rem; text-decoration: none; margin-right: 8px; display: inline-block; transition: transform 0.2s; cursor: pointer; border: 0; background: transparent; }
+        .btn-icon:hover { transform: scale(1.2); }
+        .venta-tabla { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .venta-tabla th, .venta-tabla td { border: 1px solid #EFECE6; padding: 10px; text-align: left; }
+        .venta-tabla th { background-color: #F7F5F0; color: #4E3629; }
+        .total-box { font-size: 1.3rem; font-weight: 600; color: #4E3629; text-align: right; margin-top: 10px; padding: 10px; background: #F7F5F0; border-radius: 8px; }
+        .row-agregar { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px; flex-wrap: wrap; }
+        .sales-section .row-agregar-action { min-width: 0; }
+        .sales-section .payment-method-row { margin-top: 15px; }
+        .sales-section .payment-method-group { width: 100%; }
+        .sales-section .payment-method-select { display: block; width: 100%; min-width: 0; max-width: 100%; height: 48px; padding: 0 38px 0 14px; border: 1px solid var(--borde-suave); border-radius: 10px; background-color: #FFFDF9; color: var(--color-texto); font-size: 0.95rem; line-height: 1.4; }
+        .payment-settings-help { margin: -6px 0 18px; color: var(--color-texto-suave); }
+        @media (max-width: 700px) {
+            .sales-section .product-search-group { grid-column: 1 / -1; }
+            .sales-section .row-agregar-action { width: 100%; }
+            .sales-section .row-agregar-action .btn-agregar-lista { width: 100%; }
+            .sales-section .payment-method-select { font-size: 0.88rem; padding-left: 12px; }
+        }
+        .resumen-grid { display: flex; justify-content: space-around; text-align: center; gap: 15px; }
+        .resumen-item { flex: 1; padding: 10px; }
+        .resumen-item.mid { border-left: 1px solid #EFECE6; border-right: 1px solid #EFECE6; }
+        .modal-img { max-width: 150px; height: auto; border-radius: 8px; margin: 0 auto 15px; background: #eee; display: block; object-fit: cover; }
+        .modal-scroll-caracteristicas { width: 100%; max-height: 140px; overflow-y: auto; background-color: #FDFBF7; padding: 12px; border-radius: 8px; border: 1px solid #DCD6CD; text-align: left; margin-top: 8px; font-size: 0.9rem; color: #4A3B32; white-space: pre-line; }
+        .category-control { display: flex; gap: 8px; align-items: center; }
+        .category-select { flex: 1; min-width: 0; }
+        .btn-add-dynamic { background: #6B7B45; color: #fff; border-radius: 8px; padding: 0; font-size: 1rem; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; flex: 0 0 45px; transition: background 0.2s, transform 0.2s; }
+        .btn-add-dynamic svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+        .btn-add-dynamic:hover { background: #556B2F; }
+        .btn-add-dynamic:focus-visible { outline: 3px solid rgba(107,123,69,.25); outline-offset: 2px; }
+        .btn-delete-dynamic { background: #F7E9E4; color: #A95C42; border: none; border-radius: 8px; width: 45px; height: 45px; flex: 0 0 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, transform 0.2s; }
+        .btn-delete-dynamic:hover { background: #F1D8D0; transform: translateY(-1px); }
+        .btn-delete-dynamic svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+</head>
+<body>
+<header class="main-header">
+    <button type="button" id="btn-salir" class="btn-logout-pill" title="Cerrar Sesión">⏻ Salir</button>
+    <img src="img/la-pana-del-bajo.jpg" alt="Panadería y Blanquería" class="logo-marca">
+    <h1>Panadería & Blanquería - Sistema de Gestión 🥖</h1>
+    <p style="color: #5A4A42; margin-top: 5px; font-size: 0.9rem;">¡Hola, <strong id="nombre-usuario">Usuario</strong>!</p>
+    <nav class="header-nav">
+        <a href="#sec-venta">🛍️ Nueva Venta</a>
+        <a href="#sec-inventario">📦 Inventario</a>
+        <a href="#sec-metodos-pago">💳 Métodos de Pago</a>
+        <a class="admin-only" href="#sec-resumen">📈 Resumen</a>
+        <a class="admin-only" href="#sec-nuevo-producto">🥐 Nuevo Producto</a>
+        <a class="admin-only" href="#" id="btnReporte">📊 Reporte Mensual</a>
+        <a class="admin-only" href="usuarios.html">👥 Usuarios</a>
+    </nav>
+</header>
+
+<main class="container">
+    <!-- Resumen del Negocio -->
+    <section id="sec-resumen" class="card stats-section admin-only" style="background-color: #F7F5F0;">
+        <h2>Resumen del Negocio 📈</h2>
+        <div class="resumen-grid">
+            <div class="resumen-item"><p style="font-size:0.85rem;color:#5A4A42;font-weight:600;">Total de Ventas</p><span id="total-ventas" style="font-size:1.6rem;font-weight:600;color:#6B7B45;">0</span></div>
+            <div class="resumen-item mid"><p style="font-size:0.85rem;color:#5A4A42;font-weight:600;">Caja Recaudada</p><span id="caja-total" style="font-size:1.6rem;font-weight:600;color:#4E3629;">$0</span></div>
+            <div class="resumen-item"><p style="font-size:0.85rem;color:#5A4A42;font-weight:600;">Sin Stock</p><span id="productos-sin-stock" style="font-size:1.6rem;font-weight:600;color:#A95C42;">0</span></div>
+        </div>
+    </section>
+
+    <!-- Módulo de Ventas -->
+    <section id="sec-venta" class="card sales-section">
+        <h2>Registrar Nueva Venta 🛍️</h2>
+        <form id="form-ventas-multiples">
+            <div class="row-agregar">
+                <div class="form-group product-search-group" style="margin-bottom:0;">
+                    <label for="producto_buscar">Buscar Producto (Nombre o presentación)</label>
+                    <input type="text" id="producto_buscar" list="lista_productos" placeholder="Ej: Medialunas - Docena - $12.000" autocomplete="off">
+                </div>
+                <div class="form-group quantity-group" style="margin-bottom:0;">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" id="cantidad" min="1" value="1">
+                </div>
+                <div class="row-agregar-action">
+                    <button type="button" id="btn-agregar-item" class="btn-agregar-lista">Añadir</button>
+                </div>
+            </div>
+            <datalist id="lista_productos"></datalist>
+            <div class="table-responsive">
+                <table class="venta-tabla" id="tabla-carrito">
+                    <thead><tr><th>Producto</th><th>Presentación / Medida</th><th>Precio Unitario</th><th>Cantidad</th><th>Total</th><th>Quitar</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Selector de Método de Pago Integrado -->
+            <div class="form-group-row payment-method-row">
+                <div class="form-group payment-method-group">
+                    <label for="metodo_pago">Método de Pago</label>
+                    <select id="metodo_pago" class="payment-method-select" required>
+                        <option value="">Seleccioná método de pago</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Detalle visual del cálculo de recargo o descuento -->
+            <div id="detalle-calculo-pago" style="font-size: 0.95rem; color: var(--color-texto-suave); text-align: right; margin-bottom: 5px;"></div>
+
+            <div class="total-box">Total Final: $<span id="monto-total-venta">0</span></div>
+            <button type="submit" class="btn-submit" style="margin-top:15px;">Finalizar y Registrar Venta</button>
+        </form>
+    </section>
+
+    <section id="sec-metodos-pago" class="card">
+        <h2>Configurar Métodos de Pago 💳</h2>
+        <p class="payment-settings-help">Definí el descuento o recargo que se aplica automáticamente al elegir cada método en una venta.</p>
+        <form id="form-config-metodo-pago">
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="metodo_pago_config">Método de Pago</label>
+                    <select id="metodo_pago_config" required>
+                        <option value="">Cargando métodos...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tipo_ajuste_config">Ajuste</label>
+                    <select id="tipo_ajuste_config">
+                        <option value="">Sin descuento ni recargo</option>
+                        <option value="descuento">Descuento</option>
+                        <option value="recargo">Recargo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="valor_ajuste_config">Porcentaje (%)</label>
+                    <input id="valor_ajuste_config" type="number" min="0" step="0.01" inputmode="decimal" value="0" disabled>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit">Guardar configuración</button>
+        </form>
+    </section>
+
+    <!-- Registrar Nuevo Producto -->
+    <section id="sec-nuevo-producto" class="card form-section admin-only">
+        <h2>Registrar Nuevo Producto 🥐</h2>
+        <form id="form-nuevo-producto">
+            <div class="form-group-row">
+                <div class="form-group"><label for="nombre">Nombre del Producto</label><input type="text" id="nombre" required></div>
+                <div class="form-group"><label for="marca">Marca / Proveedor (Opcional)</label><input type="text" id="marca"></div>
+            </div>
+            <div class="form-group">
+                <label for="presentacion">Presentación / Medida</label>
+                <input type="text" id="presentacion" maxlength="120" placeholder="Ej: 500 g, 2 plazas, unidad">
+            </div>
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="categoria">Categoría</label>
+                    <div class="category-control">
+                        <select id="categoria" class="category-select" required>
+                            <option value="">-- Seleccionar Categoría --</option>
+                        </select>
+                        <button type="button" id="btn-nueva-categoria" class="btn-add-dynamic" title="Agregar Categoría" aria-label="Agregar Categoría">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                        </button>
+                        <button type="button" id="btn-eliminar-categoria" class="btn-delete-dynamic" title="Eliminar Categoría" aria-label="Eliminar Categoría">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="subcategoria">Subcategoría</label>
+                    <div class="category-control">
+                        <select id="subcategoria" class="category-select" required>
+                            <option value="">-- Primero elegí una categoría --</option>
+                        </select>
+                        <button type="button" id="btn-nueva-subcategoria" class="btn-add-dynamic" title="Agregar Subcategoría" aria-label="Agregar Subcategoría">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                        </button>
+                        <button type="button" id="btn-eliminar-subcategoria" class="btn-delete-dynamic" title="Eliminar Subcategoría" aria-label="Eliminar Subcategoría">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group-row">
+                <div class="form-group"><label for="precio_costo">Precio Costo ($)</label><input type="text" inputmode="decimal" id="precio_costo" placeholder="Ej: 2000" required></div>
+                <div class="form-group"><label for="precio_venta">Precio Venta ($)</label><input type="text" inputmode="decimal" id="precio_venta" placeholder="Ej: 3500" required></div>
+                <div class="form-group"><label for="stock">Stock</label><input type="number" min="0" id="stock" required></div>
+            </div>
+            <div class="form-group">
+                <label for="caracteristicas">Descripción / Detalles (Ingredientes, medidas, tela, etc.)</label>
+                <textarea id="caracteristicas" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="foto">Foto del Producto</label>
+                <input type="file" id="foto" accept="image/jpeg,image/png,image/webp" style="border:none;padding:5px 0;">
+                <img id="vista-previa-foto" src="#" alt="Vista previa" class="modal-img" style="display:none;margin-top:10px;max-width:100px;">
+            </div>
+            <button type="submit" class="btn-submit">Guardar Producto</button>
+        </form>
+    </section>
+
+    <!-- Módulo de Inventario -->
+    <section id="sec-inventario" class="card table-section">
+        <h2>Inventario Actual 📦</h2>
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Marca</th><th>Presentación / Medida</th><th>Clasificación</th><th>Precio Venta</th><th>Stock</th><th>Acciones</th></tr></thead>
+                <tbody id="tabla-inventario"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Modal Detalles -->
+<div id="modal-detalles" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" id="btn-close-modal">&times;</span>
+        <h2 id="modal-titulo-prod" style="font-size:1.2rem;margin-bottom:15px;"></h2>
+        <img id="modal-img-prod" src="" alt="Foto" class="modal-img">
+        <p><strong>Marca / Proveedor:</strong> <span id="modal-marca-prod"></span></p>
+        <p><strong>Presentación / Medida:</strong> <span id="modal-presentacion-prod"></span></p>
+        <p><strong>Precio Venta:</strong> $<span id="modal-precio-prod"></span></p>
+        <p><strong>Stock:</strong> <span id="modal-stock-prod"></span> u.</p>
+        <hr style="border:0;border-top:1px solid #EFECE6;margin:12px 0;">
+        <p><strong>Descripción:</strong></p>
+        <div id="modal-info-prod" class="modal-scroll-caracteristicas"></div>
+    </div>
+</div>
+
+<!-- Modal Reporte Mensual -->
+<div id="modalReporte" class="modal">
+    <div class="modal-content" style="max-width:550px;text-align:left;">
+        <span class="close-modal" id="cerrarModalReporte">&times;</span>
+        <h2 style="font-size:1.2rem;margin-bottom:15px;text-align:center;">📊 Estadísticas y Reportes</h2>
+        <div style="margin-bottom:15px;text-align:right;">
+            <button id="btn-exportar" type="button" style="background:#6B7B45;color:#fff;border:0;padding:8px 14px;border-radius:6px;font-weight:bold;cursor:pointer;">📊 Descargar Reporte en Excel</button>
+        </div>
+        <div id="resultadoEstadisticas"><p style="text-align:center;">Cargando estadísticas...</p></div>
+    </div>
+</div>
+
+<!-- Scripts como módulos para Neon -->
+<script type="module" src="js/neon-config.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
